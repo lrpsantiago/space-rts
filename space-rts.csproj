@@ -81,10 +81,45 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Billboard.cs" />
     <Compile Include="Assets\Scripts\EMouseButton.cs" />
+    <Compile Include="Assets\Scripts\Gauge.cs" />
+    <Compile Include="Assets\Scripts\ISelectableObject.cs" />
+    <Compile Include="Assets\Scripts\LocationRecorder.cs" />
+    <Compile Include="Assets\Scripts\LocationSelector.cs" />
+    <Compile Include="Assets\Scripts\MapBuilder.cs" />
+    <Compile Include="Assets\Scripts\MapReader.cs" />
+    <Compile Include="Assets\Scripts\ModifiableAttribute.cs" />
+    <Compile Include="Assets\Scripts\PathPlotter.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\AStarPathfinder.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\AbstractPathfinder.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\Agent.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\DijkstraPathfinder.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\EProbeMode.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\Grid.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\IAgent.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\IPath.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\IPathFinder.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\IPriorityQueue.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\Location.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\Path.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\PathfindingStatistics.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\PriorityQueue\BinaryHeap.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\PriorityQueue\FibonacciHeap.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\PriorityQueue\FibonacciHeapNode.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\PriorityQueue\IPair.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\PriorityQueue\IPriorityQueue.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\PriorityQueue\PairNode.cs" />
+    <Compile Include="Assets\Scripts\Pathfiding\PriorityQueue\SortedList.cs" />
+    <Compile Include="Assets\Scripts\PathfinderRobot.cs" />
+    <Compile Include="Assets\Scripts\PathfindingThread.cs" />
     <Compile Include="Assets\Scripts\Planet.cs" />
     <Compile Include="Assets\Scripts\RtsCameraHandler.cs" />
+    <Compile Include="Assets\Scripts\Selector.cs" />
     <Compile Include="Assets\Scripts\Ship.cs" />
+    <Compile Include="Assets\Scripts\StatisticsRecorder.cs" />
+    <Compile Include="Assets\Scripts\UnitHpBar.cs" />
+    <Compile Include="Assets\Scripts\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\SpaceCraft 0\Readme.txt" />
