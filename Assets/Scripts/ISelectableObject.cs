@@ -5,9 +5,11 @@ namespace SpaceRts
     public interface ISelectableObject
     {
         bool IsSelected { get; set; }
+        Transform Transform { get; }
 
         void OnSelection();
-        void OnDismiss();
-        void OnPositionSelection(Vector3 position);
+        void OnSelectionDismiss();
+        void OnPositionSelection(Vector3 position, Vector3? facingDirection);
+        void OnPointToAnotherObject(ISelectableObject anotherObject);
     }
 }
