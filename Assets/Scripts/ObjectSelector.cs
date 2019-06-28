@@ -131,6 +131,10 @@ namespace SpaceRts
                     return;
                 }
 
+                var originalPosSelction = _positionSelectionInstances.First()
+                    .transform
+                    .position;
+
                 for (int i = 0; i < SelectedObjects.Count; i++)
                 {
                     var obj = SelectedObjects[i];
