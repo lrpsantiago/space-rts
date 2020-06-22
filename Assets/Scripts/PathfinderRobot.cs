@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using UnityEngine;
+using Grid = PushingBoxStudios.Pathfinding.Grid;
 
 namespace Assets.Scripts
 {

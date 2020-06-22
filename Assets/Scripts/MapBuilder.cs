@@ -5,6 +5,7 @@ using PushingBoxStudios.SteampunkTd.Maps;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Grid = PushingBoxStudios.Pathfinding.Grid;
 
 namespace Assets.Scripts
 {
