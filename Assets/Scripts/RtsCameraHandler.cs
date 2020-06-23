@@ -148,7 +148,8 @@ namespace PushingBoxStudios.SteampunkTd.Cameras
 
         private void HandleTranslation()
         {
-            if (Input.GetMouseButton((int)_rotationMouseButton))
+            if (Input.GetMouseButton((int)_rotationMouseButton)
+                || Input.GetMouseButton((int)EMouseButton.LeftButton))
             {
                 _translationVelocity = Vector3.zero;
                 _destTranslation = _target.transform.position;

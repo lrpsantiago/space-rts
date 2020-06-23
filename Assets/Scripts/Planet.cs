@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace SpaceRts
 {
@@ -12,6 +15,12 @@ namespace SpaceRts
 
         [SerializeField]
         private float _atmosphereSpeed = 1.2f;
+
+        [SerializeField]
+        private string _sizeDescription;
+
+        [SerializeField]
+        private string _typeDescription;
 
         private GameObject _atmosphere;
         private GameObject _rallyPoint;
@@ -90,20 +99,40 @@ namespace SpaceRts
         {
             IsSelected = true;
 
-            var selection = transform.Find("Selection").gameObject;
+            var selection = transform.Find("Selection")
+                .gameObject;
+
             selection.SetActive(IsSelected);
             _rallyPoint.SetActive(IsSelected);
 
-            Debug.Log("Planet " + Name + " selected.");
+            var titleUi = GameObject.Find("TitleGroup/Title")
+                .GetComponent<Text>();
+
+            var subtitleUi = GameObject.Find("TitleGroup/Subtitle")
+                .GetComponent<Text>();
+
+            titleUi.text = Name.ToUpper();
+            subtitleUi.text = $"{_sizeDescription} {_typeDescription} Planet";
         }
 
         public void OnSelectionDismiss()
         {
             IsSelected = false;
 
-            var selection = transform.Find("Selection").gameObject;
+            var selection = transform.Find("Selection")
+                .gameObject;
+
             selection.SetActive(IsSelected);
             _rallyPoint.SetActive(IsSelected);
+
+            var titleUi = GameObject.Find("TitleGroup/Title")
+                .GetComponent<Text>();
+
+            var subtitleUi = GameObject.Find("TitleGroup/Subtitle")
+                .GetComponent<Text>();
+
+            titleUi.text = string.Empty;
+            subtitleUi.text = string.Empty;
         }
 
         public void OnPositionSelection(Vector3 position, Vector3? facingDirection)

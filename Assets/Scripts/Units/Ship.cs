@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace SpaceRts
 {
@@ -10,6 +11,12 @@ namespace SpaceRts
         #region Fields
 
         private static GameObject _unitCanvasPrefab;
+
+        [SerializeField]
+        private string _name;
+
+        [SerializeField]
+        private string _description;
 
         [SerializeField]
         private float _acceleration = 1;
@@ -178,6 +185,15 @@ namespace SpaceRts
             selection.SetActive(IsSelected);
 
             _hpBar.IsVisible = true;
+
+            var titleUi = GameObject.Find("TitleGroup/Title")
+                .GetComponent<Text>();
+
+            var subtitleUi = GameObject.Find("TitleGroup/Subtitle")
+                .GetComponent<Text>();
+
+            titleUi.text = _name;
+            subtitleUi.text = _description;
         }
 
         public void OnSelectionDismiss()
@@ -188,6 +204,15 @@ namespace SpaceRts
             selection.SetActive(IsSelected);
 
             _hpBar.IsVisible = false;
+
+            var titleUi = GameObject.Find("TitleGroup/Title")
+                .GetComponent<Text>();
+
+            var subtitleUi = GameObject.Find("TitleGroup/Subtitle")
+                .GetComponent<Text>();
+
+            titleUi.text = string.Empty;
+            subtitleUi.text = string.Empty;
         }
 
         public void OnPositionSelection(Vector3 position, Vector3? facingDirection)

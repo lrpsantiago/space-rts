@@ -21,9 +21,7 @@ namespace SpaceRts
         private int _selectorBorderThickness = 1;
 
         private Vector2 _selectionStart;
-
         private Vector2 _selectionEnd;
-
         private IList<GameObject> _positionSelectionInstances;
 
         public IList<ISelectableObject> SelectedObjects { get; set; }
@@ -173,21 +171,25 @@ namespace SpaceRts
             var objects = FindObjectsOfType<MonoBehaviour>()
                 .Where(o => o is ISelectableObject);
 
-            foreach (var o in objects)
+            foreach (var obj in objects)
             {
                 var selectionBounds = GetSelectionBounds();
-                var objPos = Camera.main.WorldToViewportPoint(o.transform.position);
+                var objPos = Camera.main.WorldToViewportPoint(obj.transform.position);
 
-                if (selectionBounds.Contains(objPos))
+                if (!selectionBounds.Contains(objPos))
                 {
-                    var selectableObj = o.GetComponent<ISelectableObject>();
-
-                    if (selectableObj != null && !SelectedObjects.Contains(selectableObj))
-                    {
-                        SelectedObjects.Add(selectableObj);
-                        selectableObj.OnSelection();
-                    }
+                    continue;
                 }
+
+                var selectableObj = obj.GetComponent<ISelectableObject>();
+
+                if (selectableObj == null || SelectedObjects.Contains(selectableObj))
+                {
+                    continue;
+                }
+
+                SelectedObjects.Add(selectableObj);
+                selectableObj.OnSelection();
             }
         }
 
@@ -197,9 +199,9 @@ namespace SpaceRts
 
             if (!Input.GetKey(KeyCode.LeftShift))
             {
-                foreach (var o in SelectedObjects)
+                foreach (var obj in SelectedObjects)
                 {
-                    o.OnSelectionDismiss();
+                    obj.OnSelectionDismiss();
                 }
 
                 SelectedObjects.Clear();
@@ -215,19 +217,19 @@ namespace SpaceRts
             var mask = LayerMask.GetMask(layers);
             var hits = Physics.RaycastAll(ray, Mathf.Infinity, mask);
 
-            if (hits.Length > 0)
+            if (hits.Length <= 0)
             {
-                var hit = hits[0];
-                Debug.DrawLine(ray.origin, hit.point);
-
-                var selectableObj = hit.collider
-                    .gameObject
-                    .GetComponent<ISelectableObject>();
-
-                return selectableObj;
+                return null;
             }
 
-            return null;
+            var hit = hits[0];
+            Debug.DrawLine(ray.origin, hit.point);
+
+            var selectableObj = hit.collider
+                .gameObject
+                .GetComponent<ISelectableObject>();
+
+            return selectableObj;
         }
 
         void OnGUI()
@@ -258,7 +260,7 @@ namespace SpaceRts
                 var hit = hits[0];
                 Debug.DrawLine(ray.origin, hit.point);
 
-                if (hit.collider.tag == "Grid")
+                if (hit.collider.CompareTag("Grid"))
                 {
                     return hit.point;
                 }
@@ -282,7 +284,6 @@ namespace SpaceRts
 
             return bounds;
         }
-
 
         private void PickSelectableObject()
         {

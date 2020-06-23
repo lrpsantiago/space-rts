@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.Chat
@@ -17,14 +18,27 @@ namespace Assets.Scripts.Chat
         [SerializeField]
         private GameObject _chatBox;
 
+        private bool _isTyping;
+        private DateTime _lastMessageTimeStamp;
+
         private void Start()
         {
+            _isTyping = false;
+            _lastMessageTimeStamp = DateTime.Now;
+
             _chatInput.SetActive(false);
             _chatBox.SetActive(false);
         }
 
         private void Update()
         {
+            var diff = DateTime.Now - _lastMessageTimeStamp;
+
+            if (diff.Seconds >= 5 && !_isTyping)
+            {
+                _chatBox.SetActive(false);
+            }
+
             if (!Input.GetKeyDown(KeyCode.Return))
             {
                 return;
@@ -38,19 +52,27 @@ namespace Assets.Scripts.Chat
                 _chatInput.SetActive(true);
                 inputField.Select();
                 inputField.ActivateInputField();
+                _isTyping = true;
                 return;
             }
 
-            NewChatMessage(inputField.text);
+            var chatMessage = new ChatMessage
+            {
+                Sender = "You",
+                Text = inputField.text,
+                Color = Color.white
+            };
+
+            NewChatMessage(chatMessage);
             inputField.text = "";
             _chatInput.SetActive(false);
+            _isTyping = false;
+            _lastMessageTimeStamp = DateTime.Now;
         }
 
-        private void NewChatMessage(string message)
+        private void NewChatMessage(ChatMessage message)
         {
-            message = message.Trim();
-
-            if (string.IsNullOrWhiteSpace(message))
+            if (!message.IsValid())
             {
                 _chatBox.SetActive(false);
                 return;
@@ -58,16 +80,10 @@ namespace Assets.Scripts.Chat
 
             var chatMessage = Instantiate(_chatTextPrefab, _chatContent.transform);
             var chatText = chatMessage.GetComponent<Text>();
-            chatText.text = "[You]: " + message;
+            chatText.text = message.ToString();
+            chatText.color = message.Color;
 
             _chatBox.SetActive(true);
-
-            Invoke("HideChatBox", 5);
-        }
-
-        private void HideChatBox()
-        {
-            _chatBox.SetActive(false);
         }
     }
 }
