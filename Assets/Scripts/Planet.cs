@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Assets.Scripts.FogOfWar;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -24,6 +24,8 @@ namespace SpaceRts
 
         private GameObject _atmosphere;
         private GameObject _rallyPoint;
+        private bool _isDiscovered;
+        private bool _isHomeland;
 
         public string Name { get; set; }
 
@@ -64,6 +66,11 @@ namespace SpaceRts
             var angle = Random.Range(0, 360);
             transform.Rotate(transform.up, angle);
 
+            var fog = GameObject.Find("FogCamera")
+                .GetComponent<FogOfWar>();
+
+            fog.RevealPosition(transform.position, 15);
+
             CreateShip();
         }
 
@@ -92,7 +99,7 @@ namespace SpaceRts
                 ship.DestinationFacingDirection = _rallyPoint.transform.forward;
             }
 
-            Invoke("CreateShip", 30);
+            Invoke("CreateShip", 20);
         }
 
         public void OnSelection()

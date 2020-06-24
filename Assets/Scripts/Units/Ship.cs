@@ -1,4 +1,6 @@
-﻿using PushingBoxStudios;
+﻿using Assets.Scripts;
+using Assets.Scripts.FogOfWar;
+using PushingBoxStudios;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -132,6 +134,11 @@ namespace SpaceRts
 
         protected void Start()
         {
+            var fog = GameObject.Find("FogCamera")
+                .GetComponent<FogOfWar>();
+
+            fog.AddViewer(transform);
+
             var hpBarObj = Instantiate(_unitCanvasPrefab);
 
             if (hpBarObj != null)
@@ -151,6 +158,11 @@ namespace SpaceRts
 
         protected void OnDestroy()
         {
+            var fog = GameObject.Find("FogCamera")
+                .GetComponent<FogOfWar>();
+
+            fog.RemoveViewer(transform);
+
             if (Destructed != null)
             {
                 Destructed(this, EventArgs.Empty);
