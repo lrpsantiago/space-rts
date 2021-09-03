@@ -27,6 +27,11 @@ namespace SpaceRts
                         Owner.StationaryAngularSpeed * Time.deltaTime);
 
                     Owner.transform.rotation = rotation;
+
+                    if (Owner.transform.forward == Owner.DestinationFacingDirection.Value)
+                    {
+                        Owner.DestinationFacingDirection = null;
+                    }
                 }
 
                 return;
@@ -42,7 +47,14 @@ namespace SpaceRts
 
             if (angle == 0 || angle < Owner.StationaryAngularSpeed * Time.deltaTime)
             {
-                Owner.CurrentState = Owner.MovingState;
+                if (!Owner.GoingToEnterWormhole)
+                {
+                    Owner.CurrentState = Owner.MovingState;
+                }
+                else
+                {
+                    Owner.CurrentState = Owner.EnteringWormholeState;
+                }
             }
         }
 

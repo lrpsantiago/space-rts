@@ -9,8 +9,9 @@ namespace SpaceRts
     {
         private bool _isBarVisible;
         private Image _barFill;
-        private GameObject _unit; //interface
+        private Transform _unitTransform;
         private float _topBound;
+        private Camera _mainCamera;
 
         public Color LowestValueColor { get; set; }
 
@@ -32,11 +33,13 @@ namespace SpaceRts
             HighestValueColor = Color.green;
 
             SetVisibility(false);
+
+            _mainCamera = Camera.main;
         }
 
         public void Initialize(GameObject owner, Gauge gauge)
         {
-            _unit = owner;
+            _unitTransform = owner.transform;
 
             gauge.CurrentValueChanged += OnValueChanged;
             //owner.Destructed += OnDestruction;
@@ -58,7 +61,7 @@ namespace SpaceRts
 
         private void OnDestroy()
         {
-            if (_unit != null)
+            if (_unitTransform != null)
             {
                 //_unit.HpChanged -= OnValueChanged;
                 //_unit.Destructed -= OnDestruction;
@@ -77,12 +80,14 @@ namespace SpaceRts
 
         private void UpdatePosition()
         {
-            if (_unit != null)
+            if (_unitTransform == null || !_isBarVisible)
             {
-                var pos = _unit.transform.position;
-                pos.y += _topBound + FloatingHeight;
-                transform.position = Camera.main.WorldToScreenPoint(pos);
+                return;
             }
+
+            var pos = _unitTransform.position;
+            pos.y += _topBound + FloatingHeight;
+            transform.position = _mainCamera.WorldToScreenPoint(pos);
         }
 
         private void OnValueChanged(object sender, EventArgs e)

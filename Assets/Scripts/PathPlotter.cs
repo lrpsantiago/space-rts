@@ -1,4 +1,5 @@
-﻿using PushingBoxStudios.Pathfinding;
+﻿using Assets.Scripts.MapBuilding;
+using PushingBoxStudios.Pathfinding;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -47,7 +48,9 @@ namespace Assets.Scripts
 
             if (pathToPlot.Size > 0)
             {
-                var map = GameObject.Find("MapBuilder").GetComponent<MapBuilder>();
+                var map = GameObject.Find("MapBuilder")
+                    .GetComponent<MapBuilder>();
+
                 var from = map.GridToSpace(pathToPlot.Front);
 
                 var pointObj = Instantiate(_pathPointPrefab);

@@ -1,10 +1,11 @@
-﻿using Assets.Scripts;
-using Assets.Scripts.FogOfWar;
+﻿using Assets.Scripts.FogOfWar;
+using Assets.Scripts.Projectiles;
+using Assets.Scripts.Units;
 using PushingBoxStudios;
+using SpaceRts.Planets;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace SpaceRts
 {
@@ -13,6 +14,7 @@ namespace SpaceRts
         #region Fields
 
         private static GameObject _unitCanvasPrefab;
+        private static GameObject _laserPrefab;
 
         [SerializeField]
         private string _name;
@@ -32,9 +34,17 @@ namespace SpaceRts
         [SerializeField]
         private float _stationaryAngularSpeed = 60;
 
+        [SerializeField]
+        private float _visionRange = 10f;
+
+        [SerializeField]
+        private int _maxHp = 100;
+
         private readonly float _angularSpeed = 360;
-        private Gauge _hpGauge = new Gauge(100);
+        private GameObject _selection;
+        private Gauge _hpGauge;
         private UnitProgressBar _hpBar;
+        private IFogOfWar _fogOfWar;
 
         #endregion
 
@@ -64,6 +74,10 @@ namespace SpaceRts
         internal IState StationaryState { get; set; }
 
         internal IState MovingState { get; set; }
+
+        internal IState EnteringWormholeState { get; set; }
+
+        internal IState ExitingWormholeState { get; set; }
 
         public bool IsSelected { get; set; }
 
@@ -110,10 +124,15 @@ namespace SpaceRts
 
         public Vector3? DestinationFacingDirection { get; set; }
 
-        public Transform Transform
-        {
-            get { return transform; }
-        }
+        public string Name => _name;
+
+        public string Description => _description;
+
+        public Transform Transform => transform;
+
+        public bool GoingToEnterWormhole { get; set; }
+
+        public Ship Target { get; private set; }
 
         #endregion
 
@@ -124,8 +143,16 @@ namespace SpaceRts
                 _unitCanvasPrefab = Resources.Load<GameObject>("Prefabs/UI/PFB_UnitHpBar");
             }
 
+            if (_laserPrefab == null)
+            {
+                _laserPrefab = Resources.Load<GameObject>("Prefabs/Projectiles/Missile");
+            }
+
             StationaryState = new StationaryShipState(this);
             MovingState = new MovingShipState(this);
+            EnteringWormholeState = new EnteringWormholeShipState(this);
+            ExitingWormholeState = new ExitingWormholeShipState(this);
+
             DestinationQueue = new List<Vector3>();
             DestinationFacingDirection = transform.forward;
 
@@ -134,11 +161,12 @@ namespace SpaceRts
 
         protected void Start()
         {
-            var fog = GameObject.Find("FogCamera")
-                .GetComponent<FogOfWar>();
+            _fogOfWar = GameObject.Find("FogOfWar")
+                .GetComponent<IFogOfWar>();
 
-            fog.AddViewer(transform);
+            _fogOfWar.AddViewer(transform, _visionRange);
 
+            _hpGauge = new Gauge(_maxHp);
             var hpBarObj = Instantiate(_unitCanvasPrefab);
 
             if (hpBarObj != null)
@@ -153,6 +181,19 @@ namespace SpaceRts
                 hpBar.Initialize(gameObject, _hpGauge);
                 hpBar.transform.SetParent(parent, false);
                 _hpBar = hpBar;
+            }
+
+            _selection = transform.Find("Selection")
+                .gameObject;
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+
+            if (Target != null)
+            {
+                Shoot(Target);
             }
         }
 
@@ -192,39 +233,15 @@ namespace SpaceRts
         public void OnSelection()
         {
             IsSelected = true;
-
-            var selection = transform.Find("Selection").gameObject;
-            selection.SetActive(IsSelected);
-
+            _selection.SetActive(IsSelected);
             _hpBar.IsVisible = true;
-
-            var titleUi = GameObject.Find("TitleGroup/Title")
-                .GetComponent<Text>();
-
-            var subtitleUi = GameObject.Find("TitleGroup/Subtitle")
-                .GetComponent<Text>();
-
-            titleUi.text = _name;
-            subtitleUi.text = _description;
         }
 
         public void OnSelectionDismiss()
         {
             IsSelected = false;
-
-            var selection = transform.Find("Selection").gameObject;
-            selection.SetActive(IsSelected);
-
+            _selection.SetActive(IsSelected);
             _hpBar.IsVisible = false;
-
-            var titleUi = GameObject.Find("TitleGroup/Title")
-                .GetComponent<Text>();
-
-            var subtitleUi = GameObject.Find("TitleGroup/Subtitle")
-                .GetComponent<Text>();
-
-            titleUi.text = string.Empty;
-            subtitleUi.text = string.Empty;
         }
 
         public void OnPositionSelection(Vector3 position, Vector3? facingDirection)
@@ -236,23 +253,52 @@ namespace SpaceRts
 
             DestinationQueue.Add(position);
             DestinationFacingDirection = facingDirection;
+            Target = null;
         }
 
         public void OnPointToAnotherObject(ISelectableObject anotherObject)
         {
             if (anotherObject is Ship)
             {
-                Debug.Log("Another ship.");
+                var otherShip = anotherObject.Transform.gameObject.GetComponent<Ship>();
+                Target = otherShip;
             }
-            else if (anotherObject is Planet)
+            else if (anotherObject is Planet planet)
             {
-                Debug.Log("Planet " + ((Planet)anotherObject).Name);
+                Debug.Log("Planet " + planet.Name);
+            }
+            else if (anotherObject is Wormhole wormhole)
+            {
+                DestinationQueue.Clear();
+                DestinationQueue.Add(wormhole.transform.position);
+                DestinationFacingDirection = wormhole.transform.position;
+
+                GoingToEnterWormhole = true;
             }
         }
 
         public void TakeDamage(float amount)
         {
             _hpGauge.CurrentValue -= amount;
+        }
+
+        private DateTime _shootTimeStamp;
+
+        private void Shoot(Ship target)
+        {
+            var now = DateTime.Now;
+            var diff = now - _shootTimeStamp;
+
+            if (diff.TotalMilliseconds < 500)
+            {
+                return;
+            }
+
+            _shootTimeStamp = now;
+
+            var gameObj = Instantiate(_laserPrefab, transform.position, transform.rotation);
+            var laser = gameObj.GetComponent<Missile>();
+            laser.Target = target;
         }
     }
 }

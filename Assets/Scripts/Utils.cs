@@ -41,9 +41,11 @@ namespace SpaceRts
             // Move origin from bottom left to top left
             screenPosition1.y = Screen.height - screenPosition1.y;
             screenPosition2.y = Screen.height - screenPosition2.y;
+
             // Calculate corners
             var topLeft = Vector3.Min(screenPosition1, screenPosition2);
             var bottomRight = Vector3.Max(screenPosition1, screenPosition2);
+
             // Create Rect
             return Rect.MinMaxRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
         }

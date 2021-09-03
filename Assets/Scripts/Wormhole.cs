@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceRts
 {
     public class Wormhole : MonoBehaviour, ISelectableObject
     {
         public bool IsSelected { get; set; }
+
+        public string Name => "Wormhole";
+
+        public string Description => "Interstellar Travel";
 
         public Transform Transform
         {
@@ -25,6 +25,7 @@ namespace SpaceRts
 
         public void OnSelection()
         {
+
         }
 
         public void OnSelectionDismiss()

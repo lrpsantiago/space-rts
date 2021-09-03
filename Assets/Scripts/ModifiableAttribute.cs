@@ -36,13 +36,7 @@ namespace PushingBoxStudios
             get { return BaseValue * Multiplier; }
         }
 
-        public ModifiableAttribute(float baseValue)
-        {
-            BaseValue = baseValue;
-            Multiplier = 1;
-        }
-
-        public ModifiableAttribute(float baseValue, float multiplier)
+        public ModifiableAttribute(float baseValue, float multiplier = 1f)
         {
             BaseValue = baseValue;
             Multiplier = multiplier;

@@ -49,7 +49,7 @@ namespace PushingBoxStudios
         }
 
         /// <summary>
-        /// Return a number between 0 and 1 that is the percentage of the current value over the maximum value.
+        /// Return a number between 0 and 1 which is the percentage of the current value over the maximum value.
         /// </summary>
         public float NormalizedValue
         {

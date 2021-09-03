@@ -4,18 +4,20 @@ namespace Assets.Scripts
 {
     public class LocationSelector : MonoBehaviour
     {
+        private Camera _mainCamera;
         private PathfinderRobot _robot;
         private Transform _tileSelector;
 
         public void Start()
         {
+            _mainCamera = Camera.main;
             _robot = GameObject.Find("Robot").GetComponent<PathfinderRobot>();
             _tileSelector = GameObject.Find("TileSelector").transform;
         }
 
         public void Update()
         {
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            var ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
             var layers = new string[] { "Land" };
             var mask = LayerMask.GetMask(layers);
             var hits = Physics.RaycastAll(ray, Mathf.Infinity, mask);

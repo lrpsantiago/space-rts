@@ -1,8 +1,5 @@
 ﻿using PushingBoxStudios.Pathfinding;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Assets.Scripts
 {
@@ -14,7 +11,7 @@ namespace Assets.Scripts
         private Location _goal;
         private Action<IPath> _callback;
 
-        public PathfindingThread(AbstractPathfinder pathfinder, Grid grid, Location start, Location goal, 
+        public PathfindingThread(AbstractPathfinder pathfinder, Grid grid, Location start, Location goal,
             Action<IPath> callback)
         {
             _pathfinder = pathfinder;

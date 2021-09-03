@@ -6,15 +6,17 @@ namespace PushingBoxStudios.SteampunkTd
     {
         [SerializeField]
         private bool _yAxisOnly = false;
+        private Camera _camera;
 
         protected virtual void Start()
         {
+            _camera = Camera.main;
             Update();
         }
 
         protected virtual void Update()
         {
-            var camRotation = Camera.main.transform.rotation;
+            var camRotation = _camera.transform.rotation;
 
             if (!_yAxisOnly)
             {

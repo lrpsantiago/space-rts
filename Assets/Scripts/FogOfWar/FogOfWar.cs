@@ -1,13 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Assets.Scripts.FogOfWar
 {
-    public class FogOfWar : MonoBehaviour
+    public class FogOfWar : MonoBehaviour, IFogOfWar
     {
         [SerializeField]
-        private GameObject _fogOfWarPlane;
+        private GameObject _fogCamera;
+
+        [SerializeField]
+        private GameObject _mainFogPlane;
 
         [SerializeField]
         private LayerMask _fogLayer;
@@ -21,8 +28,13 @@ namespace Assets.Scripts.FogOfWar
         private Texture2D _texture;
         private Color[] _colors;
         private IList<FogOfWarViewer> _viewers;
-        private Vector3 vectorCenter = new Vector3();
-        private Vector3 vectorPos = new Vector3();
+        private bool _isOdd;
+        private bool _revealed;
+        private IList<int> _lastPos;
+        private IList<Vector2> _hitsUvPos;
+        private IList<float> _viewersRadius;
+        private Thread thread;
+        private DateTime _lastTimeStamp;
 
         private void Awake()
         {
@@ -35,48 +47,99 @@ namespace Assets.Scripts.FogOfWar
                 _colors[i] = Color.black;
             }
 
-            _fogOfWarPlane.GetComponent<MeshRenderer>().material.mainTexture = _texture;
+            _mainFogPlane.GetComponent<MeshRenderer>().material.mainTexture = _texture;
+            _lastPos = new List<int>();
+            _hitsUvPos = new List<Vector2>();
+            _viewersRadius = new List<float>();
 
-            UpdateColor();
+            UpdateTexture();
         }
 
         private void Update()
         {
-            for (int i = 0; i < _viewers.Count; i++)
+            if (_revealed)
             {
-                var position = _viewers[i].Transform.position;
-                var radius = _viewers[i].ViewRadius;
-
-                RevealPosition(position, radius);
+                return;
             }
 
-            UpdateColor();
+            var now = DateTime.Now;
+            var diff = now - _lastTimeStamp;
+
+            if (diff.TotalMilliseconds < 50)
+            {
+                return;
+            }
+
+            _lastTimeStamp = now;
+            _hitsUvPos.Clear();
+            _viewersRadius.Clear();
+
+            for (int i = 0; i < _viewers.Count; i++)
+            {
+                var mod = i % 2;
+
+                if (_isOdd && mod == 0 || !_isOdd && mod == 1)
+                {
+                    continue;
+                }
+
+                var position = _viewers[i].Transform.position;
+
+                if (_lastPos[i] == position.GetHashCode())
+                {
+                    continue;
+                }
+
+                _lastPos[i] = position.GetHashCode();
+
+                var radius = _viewers[i].ViewRadius;
+                var origin = _fogCamera.transform.position;
+                var direction = position - _fogCamera.transform.position;
+
+                if (!Physics.Raycast(origin, direction, out RaycastHit hit, float.PositiveInfinity, _fogLayer))
+                {
+                    continue;
+                }
+
+                _hitsUvPos.Add(hit.textureCoord);
+                _viewersRadius.Add(radius);
+            }
+
+            _isOdd = !_isOdd;
+
+            var fogThread = new FogOfWarThread(_colors, _hitsUvPos, _textureWidth, _textureHeight, _viewersRadius);
+            thread = new Thread(fogThread.Run);
+            thread.Start();
+
+            UpdateTexture();
         }
 
         public void RevealPosition(Vector3 position, float radius)
         {
-            var direction = position - transform.position;
-            var ray = new Ray(transform.position, direction);
+            var origin = _fogCamera.transform.position;
+            var direction = position - _fogCamera.transform.position;
 
-            if (!Physics.Raycast(ray, out RaycastHit hit, float.PositiveInfinity, _fogLayer))
+            if (!Physics.Raycast(origin, direction, out RaycastHit hit, float.PositiveInfinity, _fogLayer))
             {
                 return;
             }
 
             var uv = hit.textureCoord;
-            var centerX = Mathf.RoundToInt(uv.x * _textureWidth);
-            var centerY = Mathf.RoundToInt(uv.y * _textureHeight);
-            var startX = Mathf.RoundToInt(centerX - radius);
-            var startY = Mathf.RoundToInt(centerY - radius);
-            var endX = Mathf.RoundToInt(centerX + radius);
-            var endY = Mathf.RoundToInt(centerY + radius);
+            var centerX = (uv.x * _textureWidth) - 0.5f;
+            var centerY = (uv.y * _textureHeight) - 0.5f;
+            var startX = Mathf.CeilToInt(centerX - radius);
+            var startY = Mathf.CeilToInt(centerY - radius);
+            var endX = Mathf.CeilToInt(centerX + radius);
+            var endY = Mathf.CeilToInt(centerY + radius);
+            var radiusSqr = radius * radius;
+            var halfRadius = Mathf.Pow(radius / 2, 2);
 
             for (int y = startY; y < endY; y++)
             {
                 for (int x = startX; x < endX; x++)
                 {
-                    if (x < 0 || x > _textureWidth
-                        || y < 0 || y > _textureHeight)
+                    if (x < 0 || x >= _textureWidth
+                        || y < 0 || y >= _textureHeight)
                     {
                         continue;
                     }
@@ -88,19 +151,17 @@ namespace Assets.Scripts.FogOfWar
                         continue;
                     }
 
-                    vectorCenter.Set(centerX, 0, centerY);
-                    vectorPos.Set(x, 0, y);
+                    var dX = Mathf.Abs(x - centerX);
+                    var dY = Mathf.Abs(y - centerY);
+                    var dist = dX * dX + dY * dY;
 
-                    var dist = Vector3.SqrMagnitude(vectorPos - vectorCenter);
-                    var halfDist = Mathf.Pow(radius / 2, 2);
-
-                    if (dist > radius * radius)
+                    if (dist > radiusSqr)
                     {
                         continue;
                     }
 
-                    var alpha = dist > halfDist
-                        ? ((dist - halfDist) / halfDist) * 0.25f
+                    var alpha = (dist > halfRadius)
+                        ? ((dist / halfRadius) - 1)
                         : 0;
 
                     _colors[y * _textureWidth + x].a = Mathf.Min(color.a, alpha);
@@ -108,7 +169,13 @@ namespace Assets.Scripts.FogOfWar
             }
         }
 
-        public void AddViewer(Transform viewerTransform, float radius = 10f)
+        public void RevealAll()
+        {
+            _mainFogPlane.SetActive(false);
+            _revealed = true;
+        }
+
+        public void AddViewer(Transform viewerTransform, float radius = 20f)
         {
             var viewer = new FogOfWarViewer
             {
@@ -117,8 +184,22 @@ namespace Assets.Scripts.FogOfWar
             };
 
             _viewers.Add(viewer);
+            _lastPos.Add(viewerTransform.position.GetHashCode());
+            RevealPosition(viewer.Transform.position, radius);
         }
 
+        public void UpdateViewerRadius(Transform transform, float newRadius)
+        {
+            var viewer = _viewers.FirstOrDefault(v => v.Transform == transform);
+
+            if (viewer == null)
+            {
+                return;
+            }
+
+            viewer.ViewRadius = newRadius;
+        }
+        
         public void RemoveViewer(Transform viewerTransform)
         {
             var viewer = _viewers.SingleOrDefault(v => v.Transform == viewerTransform);
@@ -128,10 +209,23 @@ namespace Assets.Scripts.FogOfWar
                 return;
             }
 
+            var index = _viewers.IndexOf(viewer);
+
+            _lastPos.RemoveAt(index);
             _viewers.Remove(viewer);
         }
-        
-        private void UpdateColor()
+
+        public void HideAll()
+        {
+            for (int i = 0; i < _colors.Length; i++)
+            {
+                _colors[i] = Color.black;
+            }
+
+            UpdateTexture();
+        }
+
+        private void UpdateTexture()
         {
             _texture.SetPixels(_colors);
             _texture.Apply();

@@ -1,4 +1,5 @@
-﻿using PushingBoxStudios.Pathfinding;
+﻿using Assets.Scripts.MapBuilding;
+using PushingBoxStudios.Pathfinding;
 using System;
 using System.Collections.Generic;
 using System.IO;
